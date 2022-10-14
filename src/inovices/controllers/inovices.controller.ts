@@ -17,6 +17,10 @@ export class InovicesController {
   ) {
     return await this.inovicesService.create(createInoviceDto, id);
   }
+  @Get('intial')
+  async getIntialData() {
+    return await this.inovicesService.getIntialData();
+  }
 
   @Get()
   async findAllInvoices() {
