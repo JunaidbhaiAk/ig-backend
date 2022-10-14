@@ -37,9 +37,10 @@ export class InovicesService {
     return await this.invoicesRepo
       .createQueryBuilder('invoices')
       .innerJoinAndSelect('invoices.client', 'client')
-      .innerJoinAndSelect('invoices.items', 'items')
+      .innerJoin('invoices.items', 'items')
       .select(['invoices.id', 'invoices.created_at', 'client.name'])
       .groupBy('items.invoiceId')
+      .orderBy('invoices.created_at', 'ASC')
       .getMany();
   }
 
