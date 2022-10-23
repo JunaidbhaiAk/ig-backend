@@ -27,34 +27,64 @@ export class InovicesService {
     });
     const invoiceRes = await this.invoicesRepo.save(invoice);
     if (invoiceRes) {
-      return this.insertItems(Number(invoiceRes.id), items);
+      return this.insertItems(Number(invoiceRes.id), items, clientId);
     } else throw new InternalServerErrorException();
   }
 
-  async insertItems(invoiceId: number, items: ItemsType[]) {
+  async insertItems(invoiceId: number, items: ItemsType[], clientId: number) {
     return await this.itemsRepo.insert(
-      items.map((ele) => ({ ...ele, invoiceId })),
+      items.map((ele) => ({ ...ele, invoiceId, clientId })),
     );
   }
 
   async getIntialData() {
-    // return this.invoicesRepo
-    //   .createQueryBuilder('invoices')
-    //   .innerJoin('invoices.items', 'items')
-    //   .where('year(now()) = year(created_at)')
-    //   .groupBy('MONTHNAME(created_at)')
-    //   .select('MONTHNAME(created_at)', 'month')
-    //   .addSelect('SUM(items.price)', 'sum')
-    //   .getRawMany();
     let revenue: any = await this.itemsRepo
       .createQueryBuilder('items')
       .select('sum(price)', 'total')
       .groupBy('invoiceId')
       .getRawMany();
+    const totalInvoices = revenue.length;
     revenue = getSum(revenue);
     const totalClients = await this.clientRepo.count();
-    return { revenue, totalClients };
+    const bestClient = await this.getBestClient();
+    return { tr: revenue, tc: totalClients, ti: totalInvoices, ...bestClient };
   }
+
+  async getBestClient() {
+    const bestClient: any = await this.clientRepo
+      .createQueryBuilder('client')
+      .select('client.id', 'id')
+      .addSelect('name')
+      .addSelect('client.created_at', 'created_at')
+      .addSelect('count(*)', 'invoice_count')
+      .innerJoin('client.invoices', 'invoices')
+      .groupBy('client.id')
+      .orderBy('count(*)', 'DESC')
+      .limit(1)
+      .getRawOne();
+    if (bestClient) {
+      const bestClientRevenue = await this.itemsRepo
+        .createQueryBuilder('items')
+        .select('sum(price)', 'total_revenue')
+        .where(`items.clientId = ${bestClient.id}`)
+        .getRawOne();
+      return { bestClient, bestClientRevenue };
+    }
+    return {};
+  }
+
+  async getRevenueByYear(year: number) {
+    return this.invoicesRepo
+      .createQueryBuilder('invoices')
+      .innerJoin('invoices.items', 'items')
+      .where(`${year} = year(created_at)`)
+      .groupBy('MONTH(created_at)')
+      .select('SUM(items.price)', 'sum')
+      .addSelect('MONTH(created_at)', 'month')
+      .orderBy('MONTH(created_at)', 'ASC')
+      .getRawMany();
+  }
+
   async findAll() {
     const dateqry =
       'CONCAT(SUBSTR(MONTHNAME(invoices.created_at),1,3)," ",DAY(invoices.created_at)," ",YEAR(invoices.created_at))';

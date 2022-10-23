@@ -1,3 +1,4 @@
+import { Client } from 'src/clients/entity/client.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -23,7 +24,12 @@ export class Items {
   price: number;
   @Column()
   invoiceId: number;
+  @Column()
+  clientId: number;
   @ManyToOne(() => Invoices, (invoice) => invoice.items)
   @JoinColumn({ name: 'invoiceId' })
   invoice: Invoices;
+  @ManyToOne(() => Client, (client) => client.items)
+  @JoinColumn({ name: 'clientId' })
+  client: Client;
 }

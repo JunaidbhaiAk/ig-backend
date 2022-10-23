@@ -1,4 +1,5 @@
 import { Invoices } from 'src/inovices/entities/invoices.entity';
+import { Items } from 'src/inovices/entities/items.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -26,6 +27,8 @@ export class Client {
   GSTNo: string;
   @OneToMany(() => Invoices, (invoice) => invoice.client)
   invoices: Array<Invoices>;
+  @OneToMany(() => Items, (item) => item.client)
+  items: Array<Items>;
   @CreateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',

@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Param, Inject } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Inject,
+  Query,
+} from '@nestjs/common';
 import { CreateInoviceDto } from '../dto/create-inovice.dto';
 import { Routes, Services } from 'src/utils/constants';
 import { IInvoicesService } from '../interface/invoices.interface';
@@ -17,9 +25,16 @@ export class InovicesController {
   ) {
     return await this.inovicesService.create(createInoviceDto, id);
   }
+
   @Get('intial')
   async getIntialData() {
     return await this.inovicesService.getIntialData();
+  }
+
+  @Get('revenue_year')
+  async getRevenueByYear(@Query() q) {
+    const year = q.year || new Date().getFullYear();
+    return await this.inovicesService.getRevenueByYear(year);
   }
 
   @Get()
