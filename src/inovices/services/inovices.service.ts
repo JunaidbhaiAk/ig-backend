@@ -68,7 +68,7 @@ export class InovicesService {
         .select('sum(price)', 'total_revenue')
         .where(`items.clientId = ${bestClient.id}`)
         .getRawOne();
-      return { bestClient, bestClientRevenue };
+      return { ...bestClient, ...bestClientRevenue };
     }
     return {};
   }
